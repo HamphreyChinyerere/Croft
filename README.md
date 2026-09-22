@@ -1,8 +1,9 @@
 # CROFT
 
 Croft is a multi-platform productivity platform. This repository currently contains
-the monorepo foundation and shared TypeScript configuration. No applications,
-product features, or official brand assets have been added yet.
+the monorepo foundation, shared TypeScript configuration, and a NestJS API with
+process liveness checking. Database, authentication, and product modules are not
+implemented. Official brand assets have not been added.
 
 ## Toolchain
 
@@ -24,7 +25,7 @@ Commit `pnpm-lock.yaml` with dependency changes. For reproducible installs, use
 ## Repository layout
 
 ```text
-apps/                    Future applications
+apps/api/                NestJS API foundation
 packages/config/         Shared TypeScript configuration
 assets/brand/            Brand source/reference assets
 assets/vendor/           Third-party assets
@@ -35,9 +36,9 @@ infrastructure/          Future infrastructure configuration
 scripts/                 Future repository tooling
 ```
 
-Workspace discovery includes `apps/*` and `packages/*`. The configuration package
-is the only workspace package; `apps/` remains empty. `.gitkeep` files preserve
-intentionally empty directories in Git. No nested repositories are needed.
+Workspace discovery includes `apps/*` and `packages/*`. `@croft/api` consumes
+`@croft/config` through a workspace dependency. `.gitkeep` files preserve the
+remaining intentionally empty directories. No nested repositories are needed.
 
 ## Commands
 
@@ -49,14 +50,49 @@ pnpm typecheck
 pnpm test
 ```
 
-These root scripts delegate to matching scripts in workspace packages. At this
-foundation stage, they have no package tasks to run. A successful invocation does
-not mean application builds, linting, type checking, or tests have been performed.
+These root scripts run the API's matching tasks through Turborepo. `pnpm test` runs
+unit tests; run API E2E tests separately as shown below. The configuration package
+has no build step or runtime code.
 
 Development tasks are persistent and uncached. Builds run dependency builds first
-and cache `dist/` and `build/`; tests can cache `coverage/`. Lint, typecheck, and test
+and cache `dist/` and `build/`; tests cache logs only. Lint, typecheck, and test
 wait for dependency builds. Refine task dependencies, outputs, and environment
 inputs when real packages are introduced.
+
+## API
+
+```sh
+pnpm --filter @croft/api dev
+# Or start workspace development tasks:
+pnpm dev
+```
+
+`GET http://localhost:3000/health` returns HTTP 200 with `{"status":"ok"}`.
+This checks API-process liveness only, with no dependency or database checks.
+The API uses Nest's default Express adapter and listens on `0.0.0.0` for local
+and deployment use. Set `PORT` to an integer from 1 to 65535 to override 3000;
+Turbo passes it through to development tasks. For example, in PowerShell:
+
+```powershell
+$env:PORT = '3001'
+pnpm --filter @croft/api dev
+```
+
+`apps/api/.env.example` documents the supported setting; `.env` is not loaded
+automatically. Set environment variables in your shell or deployment environment.
+Stop development with Ctrl+C; Nest shutdown hooks are enabled. On Windows, prefer
+the filtered command: Turbo's global `pnpm.cmd` wrapper may require a second
+Ctrl+C after the API has exited.
+
+```sh
+pnpm --filter @croft/api test:e2e
+pnpm --filter @croft/api build
+pnpm --filter @croft/api start:prod
+```
+
+Production starts compiled `dist/main.js`. `start` builds and runs once; `dev`
+watches sources. NestJS 12 uses ESM; Jest runs with its documented
+`--experimental-vm-modules` flag for ESM tests. This flag is test-only.
 
 ## Shared TypeScript configuration
 
@@ -89,8 +125,9 @@ leaves module resolution and emit policy to consumers; the Node preset allows
 emit, while the browser preset delegates output to the bundler.
 
 There is no root `tsconfig.json`: the root has no TypeScript sources or tooling
-code to compile. Root task scripts still have no executable package tasks;
-configuration validation is not an application build or test.
+code to compile. The API inherits the Node preset without relaxing strict checks.
+It adds `isolatedModules` for ts-jest's NodeNext transformation, its source/output
+paths, and Node types. The production build excludes test files.
 
 ## Brand
 

@@ -1,3 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# Reviewed native install scripts used by Nest's watcher and Jest's resolver.
+allowBuilds:
+  '@parcel/watcher@2.6.0': true
+  'unrs-resolver@1.12.2': true

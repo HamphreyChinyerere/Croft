@@ -1,8 +1,8 @@
 # CROFT
 
 Croft is a multi-platform productivity platform. This repository currently contains
-only the foundation for a TypeScript-oriented monorepo. No applications, shared
-packages, product features, or official brand assets have been added yet.
+the monorepo foundation and shared TypeScript configuration. No applications,
+product features, or official brand assets have been added yet.
 
 ## Toolchain
 
@@ -25,7 +25,7 @@ Commit `pnpm-lock.yaml` with dependency changes. For reproducible installs, use
 
 ```text
 apps/                    Future applications
-packages/                Future shared packages
+packages/config/         Shared TypeScript configuration
 assets/brand/            Brand source/reference assets
 assets/vendor/           Third-party assets
 docs/architecture/      Architecture documentation
@@ -35,10 +35,9 @@ infrastructure/          Future infrastructure configuration
 scripts/                 Future repository tooling
 ```
 
-Workspace discovery includes `apps/*` and `packages/*`. These directories are
-intentionally empty; `.gitkeep` files preserve them in Git. No nested repositories
-are needed. TypeScript dependencies and configurations will be added with actual
-code, when the requirements are known.
+Workspace discovery includes `apps/*` and `packages/*`. The configuration package
+is the only workspace package; `apps/` remains empty. `.gitkeep` files preserve
+intentionally empty directories in Git. No nested repositories are needed.
 
 ## Commands
 
@@ -58,6 +57,40 @@ Development tasks are persistent and uncached. Builds run dependency builds firs
 and cache `dist/` and `build/`; tests can cache `coverage/`. Lint, typecheck, and test
 wait for dependency builds. Refine task dependencies, outputs, and environment
 inputs when real packages are introduced.
+
+## Shared TypeScript configuration
+
+`@croft/config` exports JSON presets with no runtime code or build step:
+
+- `@croft/config/tsconfig/base.json`: strict checks and an ES2022 baseline.
+- `@croft/config/tsconfig/node.json`: ES2023 libraries without DOM globals,
+  NodeNext modules/resolution, and legacy decorator metadata for NestJS consumers.
+- `@croft/config/tsconfig/react.json`: browser libraries, bundler resolution,
+  React JSX, isolated modules, and type checking without emitting JavaScript.
+
+TypeScript 6.0.3 is pinned at the root, matching the current NestJS CLI's 6.0.x
+compiler line. Reassess the compiler version when introducing application tooling.
+
+Future consumers should declare `"@croft/config": "workspace:*"` in their
+`devDependencies`, then extend the appropriate exported path, for example:
+
+```json
+{
+  "extends": "@croft/config/tsconfig/react.json",
+  "include": ["src"]
+}
+```
+
+Consumers own their source/output paths, environment types, and framework
+packages. Node consumers must choose their package's `type` (CommonJS or ESM),
+set an `outDir` for builds, and add Node types when needed. React consumers add
+React types and Vite client types with the actual application. The base preset
+leaves module resolution and emit policy to consumers; the Node preset allows
+emit, while the browser preset delegates output to the bundler.
+
+There is no root `tsconfig.json`: the root has no TypeScript sources or tooling
+code to compile. Root task scripts still have no executable package tasks;
+configuration validation is not an application build or test.
 
 ## Brand
 

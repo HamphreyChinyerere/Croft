@@ -169,6 +169,11 @@ importers:
       turbo:
         specifier: 2.11.2
         version: 2.11.2
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  packages/config: {}
 
 packages:
 
@@ -206,6 +211,11 @@ packages:
     resolution: {integrity: sha512-s0GhnWXlAAN+wb2GRMQxnZgFweRWTAceRWW/4Lk9iHj7QuLZMjDxQQqu+Xoh7Nckuy8UiSim520w6yqP2+ertw==}
     hasBin: true
 
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
 snapshots:
 
   '@turbo/darwin-64@2.11.2':
@@ -234,3 +244,5 @@ snapshots:
       '@turbo/linux-arm64': 2.11.2
       '@turbo/windows-64': 2.11.2
       '@turbo/windows-arm64': 2.11.2
+
+  typescript@6.0.3: {}
